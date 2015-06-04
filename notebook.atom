@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xml:lang="en-US" xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:h1labs.com,2005:/notebook</id>
+  <link rel="alternate" type="text/html" href="http://h1labs.com"/>
+  <link rel="self" type="application/atom+xml" href="http://h1labs.com/notebook.atom"/>
+  <title>h1labs Notebook</title>
+  <updated>2009-09-17T18:08:00Z</updated>
+  <icon>http://h1labs.com/assets/apple-touch-icon-7d36633e5f11c35e7eb871836428a6cd.png</icon>
+  <logo>http://h1labs.com/assets/logo-ad0fb5c29f808c2674b43790432b1708.png</logo>
+  <rights>© 2010 h1labs</rights>
+  <entry>
+    <id>tag:h1labs.com,2005:Post/6</id>
+    <published>2009-09-17T18:08:00Z</published>
+    <updated>2013-06-22T08:12:04Z</updated>
+    <link rel="alternate" type="text/html" href="http://h1labs.com/notebook/2009/9/17/kakoe-la-tele-es-tuya"/>
+    <title>Kakoe: la tele es tuya</title>
+    <content type="html">&lt;p&gt;Today we have opened the curtains to &lt;a href="http://kakoe.es/"&gt;Kakoe&lt;/a&gt;, the latest project where we've been working the past months. It has been amazing to collaborate hand in hand with great people like &lt;a href="http://www.jesusencinar.com/"&gt;Jesus Encinar&lt;/a&gt; and &lt;a href="http://www.seisdeagosto.com/"&gt;Juan Leal&lt;/a&gt;, while additional ideas and bug reports came from &lt;a href="http://calamonte.com/"&gt;Daniel Calamonte&lt;/a&gt;. Our bet: To provide an easy to use platform for users that want to join and give omments about what they're watching at TV. Do you think &lt;a href="http://kakoe.es/"&gt;we've reached the goal&lt;/a&gt;?&lt;/p&gt;
+
+&lt;p&gt;We still have to add many other features that are dancing in our heads, so stalk the fish. Long life for &lt;a href="http://kakoe.es/"&gt;Kakoe&lt;/a&gt;!&lt;/p&gt;</content>
+    <author>
+      <name>Carlos Paramio</name>
+    </author>
+  </entry>
+  <entry>
+    <id>tag:h1labs.com,2005:Post/1</id>
+    <published>2009-01-09T09:17:00Z</published>
+    <updated>2010-08-25T18:18:52Z</updated>
+    <link rel="alternate" type="text/html" href="http://h1labs.com/notebook/2009/1/9/rack-facebook-a-new-rack-middleware-to-parse-facebook-parameters"/>
+    <title>rack-facebook, a new Rack middleware to parse facebook parameters</title>
+    <content type="html">&lt;p&gt;During our recent work on the current project we're building now using the &lt;a href="http://sinatra.rubyforge.org/"&gt;sinatra&lt;/a&gt; web framework, we needed a simple and effective way to treat Facebook requests. The minimum set of features that the solution should cover would be:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;It should check that the facebook signature provided at fb_sig is valid. That is, it should take all the Facebook parameters (those who start with a fb_sig_ prefix), concatenate them in order with the secret key, and calculate a MD5 hash. If the resulted hash isn't the same that the passed in at the fb_sig parameter, it should return a 400 Bad Request.&lt;/li&gt;
+  &lt;li&gt;It should convert Facebook parameters to Ruby objects when possible: 0/1 flags to false/true, timestamps to Time instances, and comma-separated friends list to an array of ids.&lt;/li&gt;
+  &lt;li&gt;It should convert the Facebook POST request method to the appropiate http method. Facebook always use a POST to communicate with a web application, but it sends the original client method at the fb_sig_request_method parameter. The environment should be modified so it uses the original client method on the request.&lt;/li&gt;
+  &lt;li&gt;It should be easy to disable it when necessary. Ideally, it should allow to skip all the previous processes according to an arbitrary set of rules. For example, it could be disabled when the request URI matches a regular expression, or when the client IP address has a certain value.&lt;/li&gt;
+  &lt;li&gt;It should execute the previous steps as soon as possible, to discard invalid requests quickly without overload the application.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For all these reasons, I decided to build a Rack middleware that takes care of those features, and just give the application valid requests all the time. Its name is &lt;a href="http://github.com/carlosparamio/rack-facebook"&gt;rack-facebook&lt;/a&gt;, and to install it just do:&lt;/p&gt;
+
+&lt;code class="brush: shell"&gt;
+gem install carlosparamio-rack-facebook --source http://gems.github.com&lt;/code&gt;
+
+&lt;p&gt;On your config.ru or application:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+require 'rack/facebook'
+use Rack::Facebook, :app_name =&gt; "My Application", :application_secret =&gt; "SECRET", :api_key =&gt; "APIKEY"&lt;/code&gt;
+
+&lt;p&gt;Without passing a block, the middleware will check the signature for all the incoming requests, denying those which doesn't have the appropiate shape. You can specify a block to filter when to apply the middleware. The block will receive the Rack environment as an argument, and it must return a value that evaluates to true to tell the middleware that it must be runned. For example, you can run the middleware only when the URI starts with /facebook_only:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+use Rack::Facebook, :app_name =&gt; "My Application", :application_secret =&gt; "SECRET", :api_key =&gt; "APIKEY" do |env|
+  env['REQUEST_URI'] =~ /^\/facebook_only/
+end&lt;/code&gt;
+
+&lt;p&gt;And that's it! The Facebook parameters are parsed to Ruby objects, so given a request like:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+curl -X POST --data "fb_sig_locale=en_US&amp;fb_sig_request_method=GET&amp;fb_sig=8773c0e980961240de13bf482fd3999d&amp;fb_sig_in_new_facebook=1&amp;fb_sig_position_fix=1&amp;fb_sig_in_canvas=1&amp;fb_sig_added=0&amp;fb_sig_api_key=1234567890abcdef1234567890abcdef&amp;fb_sig_time=1231494529.1224" http://yourappurl:port&lt;/code&gt;
+
+&lt;p&gt;Will be converted to something like:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+{"fb_sig_locale"=&amp;gt;"en_US", "fb_sig_request_method"=&amp;gt;"GET", "fb_sig"=&amp;gt;"8773c0e980961240de13bf482fd3999d", "fb_sig_in_new_facebook"=&amp;gt;true, "fb_sig_position_fix"=&amp;gt;true, "fb_sig_in_canvas"=&amp;gt;true, "fb_sig_added"=&amp;gt;false, "fb_sig_api_key"=&amp;gt;"1234567890abcdef1234567890abcdef", "fb_sig_time"=&amp;gt;Fri Jan 09 10:04:59 +0100 2009}&lt;/code&gt;
+
+&lt;p&gt;And the HTTP method that the application will receive will be GET instead of POST, because of the fb_sig_request_method parameter.&lt;/p&gt;</content>
+    <author>
+      <name>Carlos Paramio</name>
+    </author>
+  </entry>
+  <entry>
+    <id>tag:h1labs.com,2005:Post/2</id>
+    <published>2008-11-21T18:07:00Z</published>
+    <updated>2009-10-01T14:17:05Z</updated>
+    <link rel="alternate" type="text/html" href="http://h1labs.com/notebook/2008/11/21/living-on-the-edge-issues-running-rails-2-2-rc1-on-ruby-1-9"/>
+    <title>Living on the edge: Issues running Rails 2.2 RC1 on Ruby 1.9</title>
+    <content type="html">&lt;p&gt;The past friday 24th october Rails 2.2 RC1 was published, and between &lt;a href="http://guides.rubyonrails.org/2_2_release_notes.html"&gt;all the new features&lt;/a&gt; one of them is the compatibility with Ruby 1.9. But unfortunately, if you try to create a new Rails application and launch the server (webrick, mongrel, thin...) with Ruby 1.9, you might find a couple of tiny problems:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;The bootup process is stopped at the config/boot.rb file, line 86, with an error that says: "in `load_rubygems': undefined method `&amp;gt;=' for nil:NilClass (NoMethodError)". This is because, in Ruby 1.9, rubygems are autoloaded the first time is required, but at that point, the expression "defined? Gem::RubyGemsVersion" still evaluates to nil. Using Gem::RubyGemsVersion directly will autoload the module and return the expected information, and a rescue block for Ruby 1.8.x will ensure that it still works for the stable version of the interpreter. Here is the patch for the rails gem:&lt;/p&gt;
+    &lt;code class="brush: diff"&gt;
+--- environments/boot.rb.old    2008-11-04 17:00:31.000000000 +0100
++++ environments/boot.rb        2008-11-04 17:02:44.000000000 +0100
+70c70
+&amp;lt;         Gem::RubyGemsVersion if defined? Gem::RubyGemsVersion
+---
+&amp;gt;         Gem::RubyGemsVersion rescue nil&lt;/code&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The inflector.rb file at activesupport contains characters in UTF-8 encoding format, but that isn't specified at the beginning of the document as a encoding document (how it is required in Ruby 1.9 to mark the encoding used at a Ruby source file), so the interpreter parses the file thinking it is encoded in ASCII, raising a syntax error. To fix it, you just need to add the encoding comment at the beginning of the inflector.rb source code. Here is a patch for activesupport:&lt;/p&gt;
+    &lt;code class="brush: diff"&gt;
+--- lib/active_support/inflector.rb.old	2008-11-04 17:37:49.000000000 +0100
++++ lib/active_support/inflector.rb	2008-11-04 17:38:23.000000000 +0100
+@@ -1,3 +1,5 @@
++# -*- coding: utf-8 -*- # Specify Unicode UTF-8 characters
++
+ require 'singleton'
+ require 'iconv'&lt;/code&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once applied both patches, your first Rails 2.2 application skeleton running with Ruby 1.9 is ready. Enjoy!&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;UPDATED:&lt;/em&gt; This isn't required anymore if you're using Rails Edge, because my &lt;a href="http://github.com/rails/rails/commit/8412200f90c239cbf12bb32b5246d0104306f6c2"&gt;humble patch as been commited&lt;/a&gt; to the core.&lt;/p&gt;</content>
+    <author>
+      <name>Carlos Paramio</name>
+    </author>
+  </entry>
+  <entry>
+    <id>tag:h1labs.com,2005:Post/3</id>
+    <published>2008-08-21T10:06:00Z</published>
+    <updated>2009-09-30T13:56:43Z</updated>
+    <link rel="alternate" type="text/html" href="http://h1labs.com/notebook/2008/8/21/testing-named-scope-with-rspec"/>
+    <title>Testing named_scope with RSpec</title>
+    <content type="html">&lt;p&gt;With Rails 2.1, the usage of named_scope is being popularized. Some testing frameworks, like the amazing &lt;a href="http://www.thoughtbot.com/projects/shoulda"&gt;Shoulda&lt;/a&gt; (with which I'm already in love), already has support to test them easily. However, if you are creating your tests using the &lt;a href="http://rspec.info/"&gt;RSpec&lt;/a&gt; framework, you will need to create your own matcher.&lt;/p&gt;
+
+&lt;p&gt;Let's think about it. We don't want to test the Rails framework. That is, if a named_scope that looks for published articles should exist, we don't want to test that actually the returned elements are published. We suposse that Rails do that accurately. Instead, we want to test that the model contains a method with the name of the scope, and that it is declared using named_scope with some specific options. Because each scope contains a method called proxy_options, which stores the options defined for it, we can use that:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+describe Post do
+  it "should have a published named scope that returns articles with published flag set to true" do
+    Post.published.proxy_options.should == {:conditions =&amp;gt; {:published =&amp;gt; true}}
+  end
+end&lt;/code&gt;
+
+&lt;p&gt;This works, but of course it doesn't have the minimal portion of beauty. Let's create a custom matcher instead:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+class HaveNamedScope  #:nodoc:
+  def initialize(scope_name, options)
+    @scope_name = scope_name.to_s
+    @options    = options
+  end
+
+  def matches?(klass)
+    @klass = klass
+    @klass.send(@scope_name).proxy_options.should === @options
+    true
+  end
+
+  def failure_message
+    "expected #{@klass} to define named scope '#{@scope_name}' with options #{@options.inspect}, but it didn't"
+  end
+
+  def negative_failure_message
+    "expected #{@klass} to not define named scope '#{@scope_name}' with options #{@options.inspect}, but it did"
+  end
+end
+
+def have_named_scope(scope_name, options)
+  HaveNamedScope.new(scope_name, options)
+end&lt;/code&gt;
+
+&lt;p&gt;Ok, now we can do:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+describe Post do
+  it "should have a published named scope that returns articles with published flag set to true" do
+    Post.should have_named_scope(:published, {:conditions =&amp;gt; {:published =&amp;gt; true}})
+  end
+end&lt;/code&gt;
+
+&lt;p&gt;Yeah, much better. I've written some specs for this matcher, and added it to a fork of &lt;a href="http://github.com/carlosparamio/rspec-rails"&gt;rspec-rails at github&lt;/a&gt;, because it would be great that this matcher or a similar one came with the original plugin.&lt;/p&gt;</content>
+    <author>
+      <name>Carlos Paramio</name>
+    </author>
+  </entry>
+  <entry>
+    <id>tag:h1labs.com,2005:Post/4</id>
+    <published>2008-08-20T10:41:00Z</published>
+    <updated>2009-09-30T13:58:11Z</updated>
+    <link rel="alternate" type="text/html" href="http://h1labs.com/notebook/2008/8/20/execute-code-for-specific-database-adapter"/>
+    <title>Execute code for specific database adapter</title>
+    <content type="html">&lt;p&gt;If you need to execute some code that is specific to one database adapter, but you still want to make the code the most compatible possible with other adapters, the following returns you the default adapter that ActiveRecord is using (probably specified at your config/database.yml file on a Rails application):&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+&amp;gt;&amp;gt; ActiveRecord::Base.connection.adapter_name
+=&amp;gt; "MySQL"&lt;/code&gt;
+
+&lt;p&gt;You might be using separated databases for your models. In that case, you better look for the connection adapter at the desired model:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+&amp;gt;&amp;gt; User.connection.adapter_name
+=&amp;gt; "SQLite"&lt;/code&gt;
+
+&lt;p&gt;This is useful also at Rails migrations, in case that you're trying to execute a command that can't be translated directly to the correspondant adapter by ActiveRecord.&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+class SetUserAutoincrement &amp;lt; ActiveRecord::Migration
+  def self.up
+    case ActiveRecord::Base.connection.adapter_name
+    when "MySQL"
+      # commands for MySQL adapter only
+    when "SQLite"
+      # commands for SQLite adapter only
+    end
+  end
+end&lt;/code&gt;</content>
+    <author>
+      <name>Carlos Paramio</name>
+    </author>
+  </entry>
+  <entry>
+    <id>tag:h1labs.com,2005:Post/5</id>
+    <published>2008-08-20T08:26:00Z</published>
+    <updated>2009-09-30T13:59:00Z</updated>
+    <link rel="alternate" type="text/html" href="http://h1labs.com/notebook/2008/8/20/access-rails-route-helpers-from-the-console"/>
+    <title>Access Rails route helpers from the console</title>
+    <content type="html">&lt;p&gt;Sometimes you need to check what your route helpers are returning, and the "rake routes" task isn't enough. Those helpers are accessible through an instance of the ActionController::Integration::Session class, and at the Rails console there is one instance of this class already available:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+&amp;gt;&amp;gt; app.class
+=&amp;gt; ActionController::Integration::Session
+&amp;gt;&amp;gt; app.users_path
+=&amp;gt; "/users"&lt;/code&gt;
+
+&lt;p&gt;Inside the app object, the host name is automatically prepopulated to "www.example.com":&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+&amp;gt;&amp;gt; app.host
+=&amp;gt; "www.example.com"
+&amp;gt;&amp;gt; app.users_url
+=&amp;gt; "http://www.example.com/users"&lt;/code&gt;
+
+&lt;p&gt;You can change that host name easily:&lt;/p&gt;
+
+&lt;code class="brush: ruby"&gt;
+&amp;gt;&amp;gt; app.host = "evolve.st"
+=&amp;gt; "evolve.st"
+&amp;gt;&amp;gt; app.users_url
+=&amp;gt; "http://evolve.st/users"&lt;/code&gt;
+
+&lt;p&gt;And remember: That Session instance can be used to simulate HTTP requests too. If you still didn't know about it, you should take a look at &lt;a href="http://api.rubyonrails.org/classes/ActionController/Integration/Session.html"&gt;its Rails documentation page&lt;/a&gt;, because you will find it really interesting.&lt;/p&gt;</content>
+    <author>
+      <name>Carlos Paramio</name>
+    </author>
+  </entry>
+</feed>
